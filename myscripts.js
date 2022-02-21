@@ -104,7 +104,7 @@ function Dodaj() {
     }
 
 
-    //Če ni za postavit element pomeni da smo na njega kliknili za urejat lastnosti
+    //Če ni za postavit element pomeni da smo na njega kliknili za urejat lastnosti ali premikat
     else{
 
         for (let i=0;i<elementiP.length;i++) {

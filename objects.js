@@ -142,9 +142,34 @@ class Pravokotnik{
     KlikNaElement(){
         
         if(gx>this.minX&&gx<this.maxX&&gy>this.minY&&gy<this.maxY){
+            this.NatančenKlik();
             return true;
         }
         return false;
+    }
+
+    NatančenKlik(){
+        let kot=Math.round(Math.asin((this.height/2)/(this.diagonala/2))*180/Math.PI);
+
+        //ustvarimo kordinate za vse 4 točke
+        let x1 = (this.diagonala/2*Math.cos((this.deg+kot)*Math.PI/180)+this.x)-this.minX;
+        let x2 = this.diagonala/2*Math.cos((this.deg+180-kot)*Math.PI/180)+this.x;
+        let x3 = this.diagonala/2*Math.cos((this.deg+180+kot)*Math.PI/180)+this.x;
+        let x4 = this.diagonala/2*Math.cos((this.deg-kot)*Math.PI/180)+this.x;
+        let y1 = this.diagonala/2*Math.sin(-(this.deg+kot)*Math.PI/180)+this.y;
+        let y2 = (this.diagonala/2*Math.sin(-(this.deg+180-kot)*Math.PI/180)+this.y)-this.minY;
+        let y3 = this.diagonala/2*Math.sin(-(this.deg+180+kot)*Math.PI/180)+this.y;
+        let y4 = this.diagonala/2*Math.sin(-(this.deg-kot)*Math.PI/180)+this.y;
+
+        let skupek=(x1-(x1/y2*(gy-this.minY)))
+        console.log(x1,y2)
+        console.log(gx-this.minX,gy-this.minY)
+        if(gx-this.minX<skupek){
+            console.log("moglo bi bit v levem trikotniku");
+        }
+        if(gx-this.minX>skupek&&gx-this.minX<=x1&&gy-this.minY<=y2){
+            console.log("moglo bi bit v desnem trikotniku");
+        }
     }
 
     Detaili(){
