@@ -3,6 +3,14 @@ let ctx = c.getContext("2d");
 c.height = 800;
 c.width = 800;
 
+//Za nrdit lepse kote ******************
+// ctx.beginPath();
+// ctx.moveTo(50, 50);
+// ctx.arcTo(50,150, 350,150, 50);
+// ctx.arcTo(350,150, 350, 50, 50);
+// ctx.lineTo(350,50);
+// ctx.stroke();
+
 c.addEventListener("mousedown", Dodaj);
 c.addEventListener("dblclick", Odstrani);
 c.addEventListener("mousemove", Miska);

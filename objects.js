@@ -141,8 +141,7 @@ class Pravokotnik{
 
     KlikNaElement(){
         
-        if(gx>this.minX&&gx<this.maxX&&gy>this.minY&&gy<this.maxY){
-            this.NatančenKlik();
+        if(gx>this.minX&&gx<this.maxX&&gy>this.minY&&gy<this.maxY&&this.NatančenKlik()){
             return true;
         }
         return false;
@@ -152,25 +151,91 @@ class Pravokotnik{
         let kot=Math.round(Math.asin((this.height/2)/(this.diagonala/2))*180/Math.PI);
 
         //ustvarimo kordinate za vse 4 točke
-        let x1 = (this.diagonala/2*Math.cos((this.deg+kot)*Math.PI/180)+this.x)-this.minX;
-        let x2 = this.diagonala/2*Math.cos((this.deg+180-kot)*Math.PI/180)+this.x;
-        let x3 = this.diagonala/2*Math.cos((this.deg+180+kot)*Math.PI/180)+this.x;
-        let x4 = this.diagonala/2*Math.cos((this.deg-kot)*Math.PI/180)+this.x;
-        let y1 = this.diagonala/2*Math.sin(-(this.deg+kot)*Math.PI/180)+this.y;
-        let y2 = (this.diagonala/2*Math.sin(-(this.deg+180-kot)*Math.PI/180)+this.y)-this.minY;
-        let y3 = this.diagonala/2*Math.sin(-(this.deg+180+kot)*Math.PI/180)+this.y;
-        let y4 = this.diagonala/2*Math.sin(-(this.deg-kot)*Math.PI/180)+this.y;
+        let nizTock=[];
 
-        let skupek=(x1-(x1/y2*(gy-this.minY)))
-        console.log(x1,y2)
-        console.log(gx-this.minX,gy-this.minY)
-        if(gx-this.minX<skupek){
-            console.log("moglo bi bit v levem trikotniku");
+        nizTock.push(this.diagonala/2*Math.cos((this.deg+kot)*Math.PI/180)+this.x);
+        nizTock.push(this.diagonala/2*Math.sin(-(this.deg+kot)*Math.PI/180)+this.y);
+
+        nizTock.push(this.diagonala/2*Math.cos((this.deg+180-kot)*Math.PI/180)+this.x);
+        nizTock.push(this.diagonala/2*Math.sin(-(this.deg+180-kot)*Math.PI/180)+this.y);
+
+        nizTock.push(this.diagonala/2*Math.cos((this.deg+180+kot)*Math.PI/180)+this.x);
+        nizTock.push(this.diagonala/2*Math.sin(-(this.deg+180+kot)*Math.PI/180)+this.y);
+
+        nizTock.push(this.diagonala/2*Math.cos((this.deg-kot)*Math.PI/180)+this.x);
+        nizTock.push(this.diagonala/2*Math.sin(-(this.deg-kot)*Math.PI/180)+this.y);
+
+        //Zadnje točke se ponovijo da laho dokončamo loop 
+        nizTock.push(this.diagonala/2*Math.cos((this.deg+kot)*Math.PI/180)+this.x);
+        nizTock.push(this.diagonala/2*Math.sin(-(this.deg+kot)*Math.PI/180)+this.y);
+
+        //Ustvarimo začetno in končno točko klika
+        let p0 = {
+			x: gx,
+			y: gy
+		},
+		p1 = {
+			x: this.maxX,
+			y: gy
+		};
+        
+		let številointersekcij=0;
+        //pogledamo in seštejemo vse intersekcije
+        for(let i=0;i<nizTock.length-2;i+=2){
+            let p2 = {
+			    x: nizTock[i],
+			    y: nizTock[i+1]
+		    },
+		    p3 = {
+			    x: nizTock[i+2],
+			    y: nizTock[i+3]
+		    };
+            let point=this.segmentIntersect(p0, p1, p2, p3);
+            if(point != null){
+                številointersekcij+=1;
+            }
+
         }
-        if(gx-this.minX>skupek&&gx-this.minX<=x1&&gy-this.minY<=y2){
-            console.log("moglo bi bit v desnem trikotniku");
+
+        if(številointersekcij%2 == 0){
+            return false;
+        }else{
+            return true;
         }
+
+        
+        
+
     }
+    //Funkcija pogleda če se 2 premice stikajo
+    segmentIntersect(p0, p1, p2, p3) {
+        
+		let A1 = p1.y - p0.y,
+			B1 = p0.x - p1.x,
+			C1 = A1 * p0.x + B1 * p0.y,
+			A2 = p3.y - p2.y,
+			B2 = p2.x - p3.x,
+			C2 = A2 * p2.x + B2 * p2.y,
+			denominator = A1 * B2 - A2 * B1;
+
+		if(denominator == 0) {
+			return null;
+		}
+
+		let intersectX = (B2 * C1 - B1 * C2) / denominator,
+			intersectY = (A1 * C2 - A2 * C1) / denominator,
+			rx0 = (intersectX - p0.x) / (p1.x - p0.x),
+			ry0 = (intersectY - p0.y) / (p1.y - p0.y),
+			rx1 = (intersectX - p2.x) / (p3.x - p2.x),
+			ry1 = (intersectY - p2.y) / (p3.y - p2.y);
+		if(((rx0 >= 0 && rx0 <= 1) || (ry0 >= 0 && ry0 <= 1)) && 
+		   ((rx1 >= 0 && rx1 <= 1) || (ry1 >= 0 && ry1 <= 1))) {
+			return 1;
+		}
+		else {
+			return null;
+		}
+	}
 
     Detaili(){
         return "<input type='number' id='NumWD' value="+this.width+" onChange='SpremeniElementP()'> Width <br>"+
@@ -288,7 +353,7 @@ class PolKrog{
         this.y=y;
     }
     KlikNaElement(){
-        if(gx>this.minX&&gx<this.maxX&&gy>this.minY&&gy<this.maxY){
+        if(gx>this.minX&&gx<this.maxX&&gy>this.minY&&gy<this.maxY&&Razdalja(gx,gy,this.x,this.y)<this.radius/2){
             return true;
         }
         return false;
@@ -509,12 +574,100 @@ class Trikotnik{
 
     KlikNaElement(){
         
-        if(gx>this.minX&&gx<this.maxX&&gy>this.minY&&gy<this.maxY){
+        if(gx>this.minX&&gx<this.maxX&&gy>this.minY&&gy<this.maxY&&this.NatančenKlik()){
             return true;
             
         }
         return false;
     }
+    NatančenKlik(){
+        let kot=Math.round(Math.asin((this.height/2)/(this.diagonala/2))*180/Math.PI);
+        let tockaSredinaX=(this.diagonala/2*Math.cos((this.deg+180+kot)*Math.PI/180)+this.x+this.diagonala/2*Math.cos((this.deg-kot)*Math.PI/180)+this.x)/2;
+        let tockaSredinaY=(this.diagonala/2*Math.sin(-(this.deg+180+kot)*Math.PI/180)+this.y+this.diagonala/2*Math.sin(-(this.deg-kot)*Math.PI/180)+this.y)/2;
+
+        //ustvarimo kordinate za vse 4 točke
+        let nizTock=[];
+
+        nizTock.push(this.diagonala/2*Math.cos((this.deg+kot)*Math.PI/180)+this.x);
+        nizTock.push(this.diagonala/2*Math.sin(-(this.deg+kot)*Math.PI/180)+this.y);
+
+        nizTock.push(this.diagonala/2*Math.cos((this.deg+180-kot)*Math.PI/180)+this.x);
+        nizTock.push(this.diagonala/2*Math.sin(-(this.deg+180-kot)*Math.PI/180)+this.y);
+
+        nizTock.push(tockaSredinaX);
+        nizTock.push(tockaSredinaY);
+        
+        //Zadnje točke se ponovijo da laho dokončamo loop 
+        nizTock.push(this.diagonala/2*Math.cos((this.deg+kot)*Math.PI/180)+this.x);
+        nizTock.push(this.diagonala/2*Math.sin(-(this.deg+kot)*Math.PI/180)+this.y);
+
+        //Ustvarimo začetno in končno točko klika
+        let p0 = {
+			x: gx,
+			y: gy
+		},
+		p1 = {
+			x: this.maxX,
+			y: gy
+		};
+
+		let številointersekcij=0;
+        //pogledamo in seštejemo vse intersekcije
+        for(let i=0;i<nizTock.length-2;i+=2){
+            let p2 = {
+			    x: nizTock[i],
+			    y: nizTock[i+1]
+		    },
+		    p3 = {
+			    x: nizTock[i+2],
+			    y: nizTock[i+3]
+		    };
+            let point=this.segmentIntersect(p0, p1, p2, p3);
+            if(point != null){
+                številointersekcij+=1;
+            }
+
+        }
+
+        if(številointersekcij%2 == 0){
+            return false;
+        }else{
+            return true;
+        }
+
+        
+        
+
+    }
+    //Funkcija pogleda če se 2 premice stikajo
+    segmentIntersect(p0, p1, p2, p3) {
+        
+		let A1 = p1.y - p0.y,
+			B1 = p0.x - p1.x,
+			C1 = A1 * p0.x + B1 * p0.y,
+			A2 = p3.y - p2.y,
+			B2 = p2.x - p3.x,
+			C2 = A2 * p2.x + B2 * p2.y,
+			denominator = A1 * B2 - A2 * B1;
+
+		if(denominator == 0) {
+			return null;
+		}
+
+		let intersectX = (B2 * C1 - B1 * C2) / denominator,
+			intersectY = (A1 * C2 - A2 * C1) / denominator,
+			rx0 = (intersectX - p0.x) / (p1.x - p0.x),
+			ry0 = (intersectY - p0.y) / (p1.y - p0.y),
+			rx1 = (intersectX - p2.x) / (p3.x - p2.x),
+			ry1 = (intersectY - p2.y) / (p3.y - p2.y);
+		if(((rx0 >= 0 && rx0 <= 1) || (ry0 >= 0 && ry0 <= 1)) && 
+		   ((rx1 >= 0 && rx1 <= 1) || (ry1 >= 0 && ry1 <= 1))) {
+			return 1;
+		}
+		else {
+			return null;
+		}
+	}
 
     Detaili(){
         return "<input type='number' id='NumWD' value="+this.width+" onChange='SpremeniElementTrikotnik()'> Width <br>"+
@@ -554,12 +707,14 @@ class Pot{
                 ctx.arc(this.arrX[i], this.arrY[i], 5, 0, 2 * Math.PI);
                 ctx.stroke();    
             }
+            // ctx.lineWidth = 100;
             ctx.beginPath();
             ctx.moveTo(this.arrX[0],this.arrY[0]);
             for(let i=1;i<this.arrX.length;i++){
                 ctx.lineTo(this.arrX[i],this.arrY[i]);
             }
             ctx.stroke();
+            // ctx.lineWidth = 1;
         }else{
         ctx.beginPath();
         ctx.arc(this.arrX[0], this.arrY[0], 5, 0, 2 * Math.PI);
