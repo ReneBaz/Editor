@@ -158,9 +158,9 @@ function Dodaj() {
 
         for(let i=0;i<elementiPoti.length;i++){
             let infoPoti=elementiPoti[i].KlikNa(gx, gy);
-            IdelementaPotIndex=infoPoti.index;
             elementiPoti[i].kliknjenoNaElement=false;
             if(infoPoti.razdalja&&IdOznačenegaElementa==null){
+                IdelementaPotIndex=infoPoti.index;
                 elementiPoti[i].kliknjenoNaElement=true;
                 c.addEventListener("mousemove", PremikPot);
                 IdOznačenegaElementa=i;
@@ -169,11 +169,18 @@ function Dodaj() {
 
         for(let i=0;i<elementiBezCurve.length;i++){
             let infoBezCurve=elementiBezCurve[i].KlikNa(gx,gy);
-            IdelementaBezCurveIndex=infoBezCurve.index;
             elementiBezCurve[i].kliknjenoNaElement=false;
-            if(infoBezCurve.razdalja&&IdOznačenegaElementa==null){
+            //pogleda ali smo kliknili na tocko ali pa na kontrolno tocko
+            if(infoBezCurve.razdalja == "Ancor"&&IdOznačenegaElementa==null){
+                IdelementaBezCurveIndex=infoBezCurve.index;
                 elementiBezCurve[i].kliknjenoNaElement=true;
                 c.addEventListener("mousemove", PremikBezCurve);
+                IdOznačenegaElementa=i;
+            }
+            if(infoBezCurve.razdalja == "Control"&&IdOznačenegaElementa==null){
+                IdelementaBezCurveIndex=infoBezCurve.index;
+                elementiBezCurve[i].kliknjenoNaElement=true;
+                c.addEventListener("mousemove", PremikBezCurveControl);
                 IdOznačenegaElementa=i;
             }
         }
@@ -233,7 +240,7 @@ function PremikK() {
 
 //Premik kliknjene točke poti
 function PremikPot() {
-
+    console.log(IdOznačenegaElementa, IdelementaPotIndex);
     elementiPoti[IdOznačenegaElementa].Premikanje(gx, gy, IdelementaPotIndex);
 
 }
@@ -250,6 +257,9 @@ function PremikTrikotnik(){
 function PremikBezCurve(){
     elementiBezCurve[IdOznačenegaElementa].Premikanje(gx,gy,IdelementaBezCurveIndex);
 }
+function PremikBezCurveControl(){
+    elementiBezCurve[IdOznačenegaElementa].PremikanjeControl(gx,gy,IdelementaBezCurveIndex);
+}
 
 
 //Funkcija ustavi premikanje po tem ko spustis klik
@@ -258,6 +268,7 @@ c.onmouseup = function () {
     c.removeEventListener("mousemove", PremikK);
     c.removeEventListener("mousemove", PremikPot);
     c.removeEventListener("mousemove", PremikBezCurve);
+    c.removeEventListener("mousemove", PremikBezCurveControl);
     c.removeEventListener("mousemove", PremikPolKrog);
     c.removeEventListener("mousemove", PremikTrikotnik);
     IdElementaPoti = null;

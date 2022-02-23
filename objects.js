@@ -685,6 +685,7 @@ class Pot{
         this.arrY=[y];
         this.kliknjenoNaElement=false;
         this.barva='black';
+        
     }
 
     DodajTocke(x,y){
@@ -750,22 +751,65 @@ class Pot{
 
 }
 
+
+
 class BezCurve{
     constructor(x,y){
         this.arrX=[x];
         this.arrY=[y];
         this.kliknjenoNaElement=false;
         this.barva='black';
+        this.arrControlX=[];
+        this.arrControlY=[];
+        this.steviloControlTock=1
+
+        this.zdruzenaTabelaX=[]
+        this.zdruzenaTabelaY=[]
+
+        this.tabelaVmesnihTockX=[];
+        this.tabelaVmesnihTockY=[];
+
+        this.t=0.01
     }
 
     DodajTocke(x,y){
+        //Ustvari glavno točko
         this.arrX.push(x);
         this.arrY.push(y);
+
+        //Ustvari kontrolne točke
+        if(this.steviloControlTock == 1){
+            this.arrControlX.push((0.5 * this.arrX[this.arrX.length-2]) + (0.5 * this.arrX[this.arrX.length-1]))
+            this.arrControlY.push((0.5 * this.arrY[this.arrY.length-2]) + (0.5 * this.arrY[this.arrY.length-1]))
+        }
+        if(this.steviloControlTock == 2){
+            this.arrControlX.push((0.67 * this.arrX[this.arrX.length-2]) + (0.33 * this.arrX[this.arrX.length-1]))
+            this.arrControlY.push((0.67 * this.arrY[this.arrY.length-2]) + (0.33 * this.arrY[this.arrY.length-1]))
+
+            this.arrControlX.push((0.33 * this.arrX[this.arrX.length-2]) + (0.67 * this.arrX[this.arrX.length-1]))
+            this.arrControlY.push((0.33 * this.arrY[this.arrY.length-2]) + (0.67 * this.arrY[this.arrY.length-1]))
+            
+        }
+        if(this.steviloControlTock == 3){
+            this.arrControlX.push((0.75 * this.arrX[this.arrX.length-2]) + (0.25 * this.arrX[this.arrX.length-1]))
+            this.arrControlY.push((0.75 * this.arrY[this.arrY.length-2]) + (0.25 * this.arrY[this.arrY.length-1]))
+
+            this.arrControlX.push((0.5 * this.arrX[this.arrX.length-2]) + (0.5 * this.arrX[this.arrX.length-1]))
+            this.arrControlY.push((0.5 * this.arrY[this.arrY.length-2]) + (0.5 * this.arrY[this.arrY.length-1]))
+
+            this.arrControlX.push((0.25 * this.arrX[this.arrX.length-2]) + (0.75 * this.arrX[this.arrX.length-1]))
+            this.arrControlY.push((0.25 * this.arrY[this.arrY.length-2]) + (0.75 * this.arrY[this.arrY.length-1]))
+            
+        }
     }
 
     Premikanje(x,y,i){
         this.arrX[i]=x;
         this.arrY[i]=y;
+    }
+    PremikanjeControl(x,y,i){
+        this.arrControlX[i]=x;
+        this.arrControlY[i]=y;
     }
 
     KlikNa(x1,y1){
@@ -777,11 +821,24 @@ class BezCurve{
         let razdalja=Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
             if(razdalja<=5){
                 return{
-                    razdalja: true,
+                    razdalja: "Ancor",
                     index: i
                 };
             }
         }
+        for(let i=0;i<this.arrControlX.length;i++){
+            let x2=this.arrControlX[i];
+            let y2=this.arrControlY[i];
+            let x=Math.abs(x1-x2);
+            let y=Math.abs(y1-y2);
+            let razdalja=Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
+                if(razdalja<=5){
+                    return{
+                        razdalja: "Control",
+                        index: i
+                    };
+                }
+            }
         return{
             razdalja: false,
             index: 0
@@ -789,105 +846,134 @@ class BezCurve{
     }
 
     NarisiBezCurve() {
-        if(this.kliknjenoNaElement){
-            this.barva='rgba(0, 173, 255, 0.6)';
-        }else{
-            this.barva='black';
+        // if(this.kliknjenoNaElement){
+        //     this.barva='rgba(0, 173, 255, 0.6)';
+        // }else{
+        //     this.barva='black';
+        // }
+        // ctx.strokeStyle=this.barva;
+
+
+        this.UstvariZdruzenoTabelo()
+        for(let i=0;i<this.zdruzenaTabelaX.length;i++){
+            ctx.beginPath();
+            ctx.arc(this.zdruzenaTabelaX[i], this.zdruzenaTabelaY[i], 5, 0, 2 * Math.PI);
+            ctx.stroke();
         }
-        ctx.strokeStyle=this.barva;
-        let t = 0.001;
-        let tabelaVmesnihTockX=[];
-        let tabelaVmesnihTockY=[];
+        this.UstvariTabeloTočk(this.t)
+        
 
-        if (this.arrX.length < 3) {
-            if (this.arrX.length > 1) {
-                ctx.beginPath();
-                ctx.arc(this.arrX[0], this.arrY[0], 5, 0, 2 * Math.PI);
-                ctx.stroke();
+        //Nariše prvo točko
+        ctx.beginPath();
+        ctx.arc(this.arrX[0], this.arrY[0], 5, 0, 2 * Math.PI);
+        ctx.stroke();
 
-                for (let i = 1; i < this.arrX.length; i++) {
-                    ctx.beginPath();
-                    for (let y = t; y <= (1-t); y += t) {
-                        let vmesnaTockaX = ((1 - y) * this.arrX[i - 1]) + (y * this.arrX[i]);
-                        let vmesnaTockaY = ((1 - y) * this.arrY[i - 1]) + (y * this.arrY[i]);
+                
 
-                        
-                        ctx.lineTo(vmesnaTockaX, vmesnaTockaY);
-                        
+
+                if(this.arrX.length > 1){
+                    let s=0;
+                    let x=0;
+                    let y=0;
+                    while(s<this.tabelaVmesnihTockX.length){
+                        let bezkosX=this.tabelaVmesnihTockX.slice(s,s+this.steviloControlTock+1)
+                        let bezkosY=this.tabelaVmesnihTockY.slice(s,s+this.steviloControlTock+1)
+                        s+=this.steviloControlTock+1;
+                        this.Izračunaj(bezkosX,bezkosY,x,y)
+                        x++;
+                        y++;
                     }
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.arc(this.arrX[i], this.arrY[i], 5, 0, 2 * Math.PI);
-                    ctx.stroke();
-                }
-            } else {
-                ctx.beginPath();
-                ctx.arc(this.arrX[0], this.arrY[0], 5, 0, 2 * Math.PI);
-                ctx.stroke();
-
-            }
-        }else{
-
-
-                for (let i = 1; i < this.arrX.length; i++) {
-                    let zacasnaTabelaX=[];
-                    let zacasnaTabelaY=[];
-                    for (let y = t; y <= (1-t); y += t) {
-                        zacasnaTabelaX.push(((1 - y) * this.arrX[i - 1]) + (y * this.arrX[i]));
-                        zacasnaTabelaY.push(((1 - y) * this.arrY[i - 1]) + (y * this.arrY[i]));
-                    }
-                    tabelaVmesnihTockX.push(zacasnaTabelaX);
-                    tabelaVmesnihTockY.push(zacasnaTabelaY);
-                }
-                ctx.beginPath();
-                ctx.arc(this.arrX[0], this.arrY[0], 5, 0, 2 * Math.PI);
-                ctx.stroke();
-                while (tabelaVmesnihTockX.length>1) {
-                    
-                    
-                    for(let i=1;i<tabelaVmesnihTockX.length;i++){
-                    
-                    let zacasnT=t;
-                    let zacasnaTabelaX=[];
-                    let zacasnaTabelaY=[];
-                    for (let j = 1; j < tabelaVmesnihTockX[0].length; j++) {
-                       
-                        zacasnaTabelaX.push(((1 - zacasnT) * tabelaVmesnihTockX[i-1][j]) + (zacasnT * tabelaVmesnihTockX[i][j]));
-                        zacasnaTabelaY.push(((1 - zacasnT) * tabelaVmesnihTockY[i-1][j]) + (zacasnT * tabelaVmesnihTockY[i][j]));
-                       
-                        zacasnT+=t;
-                        
-                    }
-                     
                 
-                    tabelaVmesnihTockX.splice(i-1,1,zacasnaTabelaX);
-                    tabelaVmesnihTockY.splice(i-1,1,zacasnaTabelaY);
-                    tabelaVmesnihTockX.splice(i,1);
-                    tabelaVmesnihTockY.splice(i,1);
                     
                 }
                 
-            }
-                
-                for(let i=0;i<this.arrX.length;i++){
-                    ctx.beginPath();
-                    ctx.arc(this.arrX[i], this.arrY[i], 5, 0, 2 * Math.PI);
-                    ctx.stroke();
-                }
-                ctx.beginPath();
-                ctx.moveTo(this.arrX[0], this.arrY[0]);
-                for(let i=0;i<tabelaVmesnihTockX[0].length;i++){
-                    ctx.lineTo(tabelaVmesnihTockX[0][i], tabelaVmesnihTockY[0][i]);
-                    
-                }
-                ctx.lineTo(this.arrX[this.arrX.length-1],this.arrY[this.arrX.length-1])
-                ctx.stroke();
-                
 
+        
+        // ctx.strokeStyle="black";
+    }
+    //Ustvari tabelo za dolocen odsek (zdruzi ancon in control v praviln vrstni red)
+    UstvariZdruzenoTabelo(){
+        this.zdruzenaTabelaX=[]
+        this.zdruzenaTabelaY=[]
+        this.zdruzenaTabelaX.push(this.arrX[0])
+        this.zdruzenaTabelaY.push(this.arrY[0])
+        let ct=0;
+        for(let i=1;i<this.arrX.length;i++){
+            
+        
+
+
+        for(let j=0;j<this.steviloControlTock;j++){
+        this.zdruzenaTabelaX.push(this.arrControlX[ct])
+        this.zdruzenaTabelaY.push(this.arrControlY[ct])
+        ct++;
         }
-        ctx.strokeStyle="black";
+        this.zdruzenaTabelaX.push(this.arrX[i])
+        this.zdruzenaTabelaY.push(this.arrY[i])
+    }
+        
     }
 
+    UstvariTabeloTočk(t){
+        this.tabelaVmesnihTockX=[];
+        this.tabelaVmesnihTockY=[];
+                //Ustvari tabelo vseh točk ki so med control pointi
+                for (let i = 1; i < this.zdruzenaTabelaX.length; i++) {
+                    let zacasnaTabelaX=[];
+                    let zacasnaTabelaY=[];
+                    for (let y = 0; y <= 1; y += t) {
+                        zacasnaTabelaX.push(((1 - y) * this.zdruzenaTabelaX[i - 1]) + (y * this.zdruzenaTabelaX[i]));
+                        zacasnaTabelaY.push(((1 - y) * this.zdruzenaTabelaY[i - 1]) + (y * this.zdruzenaTabelaY[i]));
+
+
+                    }
+                    this.tabelaVmesnihTockX.push(zacasnaTabelaX);
+                    this.tabelaVmesnihTockY.push(zacasnaTabelaY);
+                }
+    }
+    Izračunaj(tabelatockX,tabelatockY,x,y){
+        while (tabelatockX.length>1) {
+                    
+            for(let i=1;i<tabelatockX.length;i++){
+            
+            let zacasnT=this.t;
+            let zacasnaTabelaX=[];
+            let zacasnaTabelaY=[];
+            for (let j = 1; j < tabelatockX[0].length; j++) {
+               
+                zacasnaTabelaX.push(((1 - zacasnT) * tabelatockX[i-1][j]) + (zacasnT * tabelatockX[i][j]));
+                zacasnaTabelaY.push(((1 - zacasnT) * tabelatockY[i-1][j]) + (zacasnT * tabelatockY[i][j]));
+               
+                zacasnT+=this.t;
+                
+            }
+             
+        
+            tabelatockX.splice(i-1,1,zacasnaTabelaX);
+            tabelatockY.splice(i-1,1,zacasnaTabelaY);
+            tabelatockX.splice(i,1);
+            tabelatockY.splice(i,1);
+            
+        }
+        
+    }
+        
+        for(let i=0;i<this.arrX.length;i++){
+            ctx.beginPath();
+            ctx.arc(this.arrX[i], this.arrY[i], 5, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(this.arrX[x], this.arrY[y]);
+        
+        for(let i=0;i<tabelatockX[0].length;i++){
+            ctx.lineTo(tabelatockX[0][i], tabelatockY[0][i]); 
+        }
+    
+        ctx.lineTo(this.arrX[x+1],this.arrY[y+1])
+        ctx.stroke();
+    }
 
 
 }
